@@ -38,12 +38,28 @@ const BlogHeader = () => {
 const BlogPost = () => {
 
     const { code } = useParams();
-    const [countdown, setCountdown] = useState(3);
+    const [countdown, setCountdown] = useState(7);
     const [canContinue, setCanContinue] = useState(false);
     const [shortId, setShortId] = useState(null);
     const [token, setToken] = useState(null);
     const [ads, setAds] = useState([]);
 
+
+    const fetchLinkToken = async (shortCode) => {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/links/${shortCode}`);
+            const data = await res.json();
+            if (data.token) {
+                console.log("Token fetched & stored:", data.token);
+                sessionStorage.setItem("link_token", data.token);
+                if (data.password) {
+                    sessionStorage.setItem("link_pw_required", "true");
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch token:", error);
+        }
+    };
 
     useEffect(() => {
         if (code) {
@@ -53,6 +69,9 @@ const BlogPost = () => {
             // Ubah URL di address bar tanpa reload
             const cleanUrl = window.location.origin + "/blog1";
             window.history.replaceState({}, "", cleanUrl);
+
+            // 🔥 FETCH TOKEN IMMEDIATELY 🔥
+            fetchLinkToken(code);
         }
     }, [code]);
 
@@ -60,9 +79,6 @@ const BlogPost = () => {
         const id = sessionStorage.getItem("shortlink");
         setShortId(id);
     }, []);
-
-
-
 
     useEffect(() => {
         if (countdown <= 0) {

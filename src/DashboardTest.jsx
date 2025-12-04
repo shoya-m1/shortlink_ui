@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import Notifications from "./Notifications";
 
@@ -8,6 +9,10 @@ import {
 } from "./auth";
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
+import DashboardStats from './components/DashboardStats';
+import AnalitycsChart from './components/AnalyticsChart';
+import AnalitycsDetails from './components/AnalyticsDetails';
 
 
 
@@ -109,17 +114,17 @@ export default function App() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [myLinksOpen, setMyLinksOpen] = useState(true);
     const [userId, setUserId] = useState(null)
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
 
     useEffect(() => {
         async function fetchAll() {
             try {
-                const [dashboard, overview, trends] = await Promise.all([
-                    getDashboardData(),
+                const [overview, trends] = await Promise.all([
+                    // getDashboardData(),
                     getOverviewData(),
                     getTrendsData(),
                 ]);
-                setData({ dashboard, overview, trends });
+                setData({ overview, trends });
                 // console.log(data)
             } catch (err) {
                 console.error(err);
@@ -134,6 +139,7 @@ export default function App() {
 
     useEffect(() => {
         const id = sessionStorage.getItem("id");
+        console.log(id)
         setUserId(id);
     }, []);
 
@@ -145,11 +151,11 @@ export default function App() {
         );
     }
 
-    const summary = data.dashboard.data.summary;
-    const stats = data.dashboard.data.stats;
+    // const summary = data.dashboard.data.summary;
+    // const stats = data.dashboard.data.stats;
     const overview = data.overview.data;
     const trends = data.trends.data.trends;
-    console.log(stats)
+    // console.log(stats)
     console.log(overview)
     console.log(trends)
 
@@ -166,7 +172,7 @@ export default function App() {
     return (
         <div className="bg-slate-50 min-h-screen flex text-gray-800">
             {/* <!-- Sidebar --> */}
-            <aside className={`bg-white w-64 min-h-screen flex-col border-r border-gray-200 fixed lg:static lg:translate-x-0 transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out z-20`}>
+            {/* <aside className={`bg-white w-64 min-h-screen flex-col border-r border-gray-200 fixed lg:static lg:translate-x-0 transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out z-20`}>
                 <div className="px-6 py-5 flex items-center"><LogoIcon /><h1 className="text-xl font-bold ml-2">Shortenlinks</h1></div>
                 <nav className="flex-1 px-4 space-y-2">
                     <ul>
@@ -180,12 +186,12 @@ export default function App() {
                     </ul>
                 </nav>
                 <div className="px-4 py-4 mt-auto"><button className="w-full flex items-center py-2 px-4 text-gray-600 hover:bg-gray-100 rounded-md"><LogoutIcon /><span className="ml-3">Log Out</span></button><div className="w-10 h-10 rounded-full bg-gray-200 mt-4 ml-4"></div></div>
-            </aside>
+            </aside> */}
 
             {isMenuOpen && <div className="fixed inset-0 bg-black opacity-50 z-10 lg:hidden" onClick={() => setIsMenuOpen(false)}></div>}
 
             <main className="flex-1">
-                <header className="bg-white border-b border-gray-200 p-4 xl:p-6 flex justify-between items-center">
+                {/* <header className="bg-white border-b border-gray-200 p-4 xl:p-6 flex justify-between items-center">
                     <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden text-gray-600">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" /></svg>
                     </button>
@@ -203,10 +209,11 @@ export default function App() {
                         <button className="p-2 rounded-full hover:bg-gray-100 relative"><BellIcon /><span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-purple-600"></span>
                         </button>
                     </div>
-                </header>
+                </header> */}
 
                 <div className="p-4 sm:p-6 lg:p-8 space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <DashboardStats/>
+                    {/* <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         <StatCard title="Total Earnings" value={formatCurrency(stats.total_earnings.value)} change={stats.total_earnings.change_percentage} changeTrend={stats.total_earnings.change_trend} comparisonText={`Compared to last ${stats.total_earnings.period}`} reportsLinkText="Revenue Reports" />
                         <StatCard title="Total Clicks" value={formatNumber(stats.total_clicks.value)} change={stats.total_clicks.change_percentage} changeTrend={stats.total_clicks.change_trend} comparisonText={`Compared to last ${stats.total_clicks.period}`} reportsLinkText="Arrange Reports" />
                         <div className="bg-white p-6 rounded-2xl border border-gray-200">
@@ -226,7 +233,8 @@ export default function App() {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
+                                <AnalitycsChart/>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-gray-200">
@@ -292,6 +300,8 @@ export default function App() {
                             <div className="flex items-center justify-between mt-4"><div className="flex space-x-2"><button className="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center">W</button><button className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center">F</button><button className="w-8 h-8 rounded-full bg-pink-500 text-white flex items-center justify-center">I</button><button className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center"><MoreVerticalIcon className="w-5 h-5" /></button></div><a href="#" className="text-purple-600 text-sm font-semibold">All Details →</a></div>
                         </div>
                     </div>
+
+                    <AnalitycsDetails/>
 
                     <footer className="text-center md:flex justify-between items-center text-sm text-gray-500 pt-4">
                         <div className="flex space-x-4 justify-center md:justify-start"><a href="#" className="hover:text-purple-600">Terms Of Service</a><a href="#" className="hover:text-purple-600">Privacy Policy</a><a href="#" className="hover:text-purple-600">About</a><a href="#" className="hover:text-purple-600">Contact</a><a href="#" className="hover:text-purple-600">Report Abuse</a></div>

@@ -38,7 +38,7 @@ const BlogHeader = () => {
 const BlogPost = () => {
 
     // const { code } = useParams();
-    const [countdown, setCountdown] = useState(3);
+    const [countdown, setCountdown] = useState(7);
     const [canContinue, setCanContinue] = useState(false);
     const [shortId, setShortId] = useState(null);
     const [token, setToken] = useState(null);
@@ -65,30 +65,22 @@ const BlogPost = () => {
     useEffect(() => {
         const id = sessionStorage.getItem("shortlink");
         setShortId(id);
+
+        // 🔥 GET STORED TOKEN 🔥
+        const storedToken = sessionStorage.getItem("link_token");
+        const pwRequired = sessionStorage.getItem("link_pw_required");
+
+        if (storedToken) {
+            setToken(storedToken);
+            if (pwRequired) setRequiresPassword(true);
+        } else {
+            // Fallback if user skipped blog1 (optional: redirect back)
+            console.warn("No token found, redirecting...");
+            // window.location.href = "/"; 
+        }
     }, []);
 
-    async function fetchLinkData() {
-        const res = await fetch(`http://127.0.0.1:8000/api/links/${shortId}`);
-        const data = await res.json();
-        console.log(`id: ${shortId}`)
-        // console.log(`data: ${data.pw}`)
-        // setPw(data.pw)
-        console.log(data.token)
-        setToken(data.token);
-        console.log(token)
-        if (data.pw) {
-            setRequiresPassword(data.pw);
-            return;
-        }
-        setAds(data.ads);
-        console.log(`token:  ${token}`)
-
-    }
-
-    useEffect(() => {
-        if (shortId) fetchLinkData();
-
-    }, [shortId])
+    // Removed fetchLinkData since we use stored token
 
     useEffect(() => {
         if (countdown <= 0) {
@@ -110,36 +102,14 @@ const BlogPost = () => {
 
 
 
-    async function handleContinue() {
-        console.log("Continue with:", shortId, token);
+    function handleContinue() {
+        // Navigate to Final Page
+        window.location.href = "/go";
+    }
 
-        const currentToken = token;
-        // console.log(t)
-
-        const res = await fetch(`http://127.0.0.1:8000/api/links/${shortId}/continue`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-                Authorization: `Bearer ${currentToken}`,
-            },
-            body: JSON.stringify({ token }),
-        });
-        const result = await res.json();
-        console.log(result)
-
-        // Redirect tab saat ini ke original_url
-        if (result.original_url) {
-            window.open(result.original_url);
-            // window.location.assign(result.original_url);
-        }
-
-        // Buka tab iklan dulu
-        if (result.ad_url) {
-            // window.open(result.ad_url);
-            window.location.assign(result.ad_url);
-        }
-
+    function handleContinuePw() {
+        // Navigate to Final Page (Password will be handled there)
+        window.location.href = "/go";
     }
 
 
@@ -267,17 +237,10 @@ const BlogPost = () => {
                     <div className="ring-2 ring-gray-500 rounded-lg px-7 py-2">
                         {!canContinue ? (
                             <p className="text-gray-600">Tunggu {countdown} detik...</p>
-                        ) : requiresPassword ? (
-                            <button
-                                className="text-gray-600"
-                                onClick={() => setPwHendlers(true)}
-                            >
-                                Continue
-                            </button>
                         ) : (
                             <button
                                 className="text-gray-600"
-                                onClick={() => handleContinue()}
+                                onClick={handleContinue}
                             >
                                 Continue
                             </button>
@@ -287,30 +250,7 @@ const BlogPost = () => {
                 </div>
             )
             }
-            {requiresPassword && pwHendlers && (
-                <form
-                    onSubmit={handleSubmitPassword}
-                    className="flex flex-col gap-3 p-6 bg-black shadow-lg rounded-xl"
-                >
-                    <h2 className="text-lg font-semibold text-gray-700">
-                        Link ini dilindungi password 🔒
-                    </h2>
-                    <input
-                        type="password"
-                        value={pw}
-                        onChange={(e) => setPw(e.target.value)}
-                        className="border p-2 rounded-md"
-                        placeholder="Masukkan password"
-                        required
-                    />
-                    <button
-                        type="submit"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                    >
-                        Lanjutkan
-                    </button>
-                </form>
-            )}
+
 
             {/* Gambar Utama */}
             <img

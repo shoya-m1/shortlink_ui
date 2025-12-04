@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { loginUser } from "./auth";
 import { useNavigate } from "react-router-dom";
+import GoogleLoginButton from './components/GoogleLoginButton';
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -47,6 +49,7 @@ export default function LoginPage() {
         >
           Login
         </button>
+        <GoogleLoginButton />
       </form>
       <p className="mt-4 text-gray-600">{message}</p>
     </div>

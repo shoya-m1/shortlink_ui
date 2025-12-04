@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
+import { massShortenLink } from "./auth";
 
 export default function CreateLink({ token }) {
+  const [mode, setMode] = useState('single'); // 'single' | 'mass'
+  const [massUrls, setMassUrls] = useState("");
+  const [massResults, setMassResults] = useState([]);
+
   const [originalUrl, setOriginalUrl] = useState("");
   const [title, setTitle] = useState("");
   const [password, setPassword] = useState("");
@@ -117,6 +122,24 @@ export default function CreateLink({ token }) {
     }
   };
 
+  const handleMassSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMassResults([]);
+    setError("");
+
+    try {
+      const data = await massShortenLink(massUrls, adLevel);
+      setMassResults(data.results);
+      fetchLinks(); // refresh list
+    } catch (err) {
+      console.error(err);
+      setError("Gagal memproses mass shrinker.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ==========================
   // Update Link
   // ==========================
@@ -155,80 +178,118 @@ export default function CreateLink({ token }) {
         Buat Shortlink Baru 🔗
       </h2>
 
+      {/* Tab Switcher */}
+      <div className="flex justify-center mb-6">
+        <div className="bg-gray-800 p-1 rounded-lg inline-flex">
+          <button
+            onClick={() => setMode('single')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${mode === 'single' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+          >
+            Single Link
+          </button>
+          <button
+            onClick={() => setMode('mass')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${mode === 'mass' ? 'bg-blue-600 text-white shadow' : 'text-gray-400 hover:text-white'}`}
+          >
+            Mass Shrinker
+          </button>
+        </div>
+      </div>
+
       {/* Form Create */}
-      <form onSubmit={handleSubmit} className="space-y-5 text-white bg-black p-4 rounded-lg">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Original URL <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="url"
-            required
-            value={originalUrl}
-            onChange={(e) => setOriginalUrl(e.target.value)}
-            placeholder="https://contoh.com/artikel..."
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+      <form onSubmit={mode === 'single' ? handleSubmit : handleMassSubmit} className="space-y-5 text-white bg-black p-4 rounded-lg">
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Judul</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+        {mode === 'single' ? (
+          <>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Original URL <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="url"
+                required
+                value={originalUrl}
+                onChange={(e) => setOriginalUrl(e.target.value)}
+                placeholder="https://contoh.com/artikel..."
+                className="w-full border rounded px-3 py-2 bg-gray-900 border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
-          <input
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Judul</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="w-full border rounded px-3 py-2 bg-gray-900 border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Tanggal Expired</label>
-          <input
-            type="date"
-            value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Password</label>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border rounded px-3 py-2 bg-gray-900 border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-        {/* Custom Alias (Optional) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Alias Custom (Opsional)
-          </label>
-          <input
-            type="text"
-            value={alias}
-            onChange={(e) => setAlias(e.target.value.toLowerCase())}
-            placeholder="contoh: promo-oktober"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-          />
-          {checkingAlias ? (
-            <p className="text-sm text-gray-500 mt-1">🔍 Memeriksa ketersediaan...</p>
-          ) : aliasStatus === "available" ? (
-            <p className="text-sm text-green-600 mt-1">✅ Alias tersedia!</p>
-          ) : aliasStatus === "taken" ? (
-            <p className="text-sm text-red-600 mt-1">❌ Alias sudah dipakai</p>
-          ) : null}
-        </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Tanggal Expired</label>
+              <input
+                type="date"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+                className="w-full border rounded px-3 py-2 bg-gray-900 border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
+            {/* Custom Alias (Optional) */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Alias Custom (Opsional)
+              </label>
+              <input
+                type="text"
+                value={alias}
+                onChange={(e) => setAlias(e.target.value.toLowerCase())}
+                placeholder="contoh: promo-oktober"
+                className="w-full border border-gray-700 bg-gray-900 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 text-white"
+              />
+              {checkingAlias ? (
+                <p className="text-sm text-gray-500 mt-1">🔍 Memeriksa ketersediaan...</p>
+              ) : aliasStatus === "available" ? (
+                <p className="text-sm text-green-500 mt-1">✅ Alias tersedia!</p>
+              ) : aliasStatus === "taken" ? (
+                <p className="text-sm text-red-500 mt-1">❌ Alias sudah dipakai</p>
+              ) : null}
+            </div>
+          </>
+        ) : (
+          // MASS SHRINKER UI
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Paste Links (Max 20 URLs, satu per baris) <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              required
+              rows={10}
+              value={massUrls}
+              onChange={(e) => setMassUrls(e.target.value)}
+              placeholder={`https://link1.com\nhttps://link2.com\nhttps://link3.com`}
+              className="w-full border rounded px-3 py-2 bg-gray-900 border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-sm"
+            ></textarea>
+            <p className="text-xs text-gray-400 mt-1">Hanya URL valid yang akan diproses.</p>
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium mb-1">Level Iklan</label>
           <select
             value={adLevel}
             onChange={(e) => setAdLevel(Number(e.target.value))}
-            className="w-full border rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2 bg-gray-900 border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           >
             {[1, 2, 3, 4, 5].map((lvl) => (
               <option key={lvl} value={lvl}>
@@ -241,16 +302,88 @@ export default function CreateLink({ token }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium"
         >
-          {loading ? "Membuat Link..." : "Buat Shortlink"}
+          {loading ? "Memproses..." : (mode === 'single' ? "Buat Shortlink" : "Mass Shorten")}
         </button>
 
-        {shortLink && (
-          <p className="text-center text-green-600 mt-3">
-            ✅ Link berhasil dibuat: <a href={shortLink}>{shortLink}</a>
-          </p>
+        {/* RESULT SINGLE */}
+        {mode === 'single' && shortLink && (
+          <div className="mt-4 p-4 bg-gray-900 rounded-lg border border-green-900">
+            <p className="text-center text-green-400 font-medium">
+              ✅ Link berhasil dibuat!
+            </p>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <a href={shortLink} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline break-all">{shortLink}</a>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(shortLink)}
+                className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-white"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
         )}
+
+        {/* RESULT MASS */}
+        {mode === 'mass' && massResults.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-3 text-white">Hasil Mass Shrinker</h3>
+            <div className="bg-gray-900 rounded-lg overflow-hidden border border-gray-700">
+              <table className="w-full text-sm text-left text-gray-300">
+                <thead className="text-xs text-gray-400 uppercase bg-gray-800">
+                  <tr>
+                    <th className="px-4 py-3">Original URL</th>
+                    <th className="px-4 py-3">Short URL</th>
+                    <th className="px-4 py-3 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {massResults.map((res, idx) => (
+                    <tr key={idx} className="border-b border-gray-700 hover:bg-gray-800">
+                      <td className="px-4 py-3 truncate max-w-[200px]" title={res.original_url}>
+                        {res.original_url}
+                      </td>
+                      <td className="px-4 py-3">
+                        {res.error ? (
+                          <span className="text-red-500">{res.error}</span>
+                        ) : (
+                          <a href={res.short_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
+                            {res.short_url}
+                          </a>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {!res.error && (
+                          <button
+                            type="button"
+                            onClick={() => navigator.clipboard.writeText(res.short_url)}
+                            className="text-xs bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-white"
+                          >
+                            Copy
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const allLinks = massResults.filter(r => !r.error).map(r => r.short_url).join('\n');
+                navigator.clipboard.writeText(allLinks);
+                alert('Semua link berhasil disalin!');
+              }}
+              className="mt-3 w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg text-sm"
+            >
+              Copy All Shortlinks
+            </button>
+          </div>
+        )}
+
       </form>
 
       {/* Daftar Link */}
